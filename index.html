@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon GridView with Evolution Chain and Types</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+
+<body>
+    <div class="container-fluid mt-5">
+        <h1 class="text-center mb-4">Pokémon Information</h1>
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search Pokémon..."
+                        aria-label="Search Pokémon" aria-describedby="search-addon">
+                    <button class="btn btn-outline-primary" type="button" id="searchButton"><i
+                            class="bi bi-search"></i></button>
+                </div>
+            </div>
+        </div>
+        <div id="loading" class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <div id="error" class="alert alert-danger d-none" role="alert"></div>
+        <div id="typeCategories"
+            class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-6 g-4 mb-4">
+            <!-- Type category cards will be dynamically added here -->
+        </div>
+        <div id="pokemonGrid" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+            <!-- Pokémon cards will be dynamically added here -->
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailsModalLabel">Pokémon Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalLoading" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="pokemonDetails" class="row"></div>
+                    <div id="evolutionChain" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const pokemonGrid = document.getElementById('pokemonGrid');
+            const typeCategories = document.getElementById('typeCategories');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+            const modalLoading = document.getElementById('modalLoading');
+            const pokemonDetails = document.getElementById('pokemonDetails');
+            const evolutionChain = document.getElementById('evolutionChain');
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+
+            let allPokemon = [];
+            let allTypes = [];
+
+            fetch('https://pokeapi.co/api/v2/type')
+                .then(response => response.json())
+                .then(data => {
+                    allTypes = data.results;
+                    renderTypeCategories();
+                })
+                .catch(err => {
+                    error.classList.remove('d-none');
+                    error.textContent = 'Failed to fetch Pokémon types. Please try again later.';
+                });
+
+            fetch('https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0')
+                .then(response => response.json())
+                .then(data => {
+                    loading.classList.add('d-none');
+                    allPokemon = data.results;
+                    renderPokemonGrid(allPokemon);
+                })
+                .catch(err => {
+                    loading.classList.add('d-none');
+                    error.classList.remove('d-none');
+                    error.textContent = 'Failed to fetch Pokémon data. Please try again later.';
+                });
+
+            function renderTypeCategories() {
+                typeCategories.innerHTML = '';
+                allTypes.forEach(type => {
+                    const card = document.createElement('div');
+                    card.className = 'col';
+                    card.innerHTML = `
+                        <div class="card h-100 type-card" data-type="${type.name}">
+                            <div class="card-body">
+                                <h5 class="card-title">${type.name}</h5>
+                            </div>
+                        </div>
+                    `;
+                    card.querySelector('.type-card').addEventListener('click', () => filterByType(type.name));
+                    typeCategories.appendChild(card);
+                });
+            }
+
+            function filterByType(typeName) {
+                loading.classList.remove('d-none');
+                pokemonGrid.innerHTML = '';
+                fetch(`https://pokeapi.co/api/v2/type/${typeName}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const filteredPokemon = data.pokemon.map(p => p.pokemon);
+                        renderPokemonGrid(filteredPokemon);
+                        loading.classList.add('d-none');
+                    })
+                    .catch(err => {
+                        loading.classList.add('d-none');
+                        error.classList.remove('d-none');
+                        error.textContent = 'Failed to filter Pokémon by type. Please try again later.';
+                    });
+            }
+
+            function renderPokemonGrid(pokemonArray) {
+                pokemonGrid.innerHTML = '';
+                pokemonArray.forEach(pokemon => {
+                    const card = document.createElement('div');
+                    card.className = 'col';
+                    card.innerHTML = `
+                        <div class="card h-100 pokemon-card">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${getPokemonId(pokemon.url)}.png" class="card-img-top animate__animated animate__pulse" alt="${pokemon.name}">
+                            <div class="card-body">
+                                <h5 class="card-title">${pokemon.name}</h5>
+                                <button class="btn btn-outline-primary w-100" data-url="${pokemon.url}">View Details</button>
+                            </div>
+                        </div>
+                    `;
+                    card.querySelector('button').addEventListener('click', () => showDetails(pokemon.url));
+                    pokemonGrid.appendChild(card);
+                });
+            }
+
+            function getPokemonId(url) {
+                const parts = url.split('/');
+                return parts[parts.length - 2];
+            }
+
+            function showDetails(url) {
+                modalLoading.classList.remove('d-none');
+                pokemonDetails.innerHTML = '';
+                evolutionChain.innerHTML = '';
+                detailsModal.show();
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(pokemon => {
+                        modalLoading.classList.add('d-none');
+                        document.getElementById('detailsModalLabel').textContent = pokemon.name;
+                        pokemonDetails.innerHTML = `
+                            <div class="col-md-6">
+                                <img src="${pokemon.sprites.other['official-artwork'].front_default}" alt="${pokemon.name}" class="img-fluid rounded animate__animated animate__fadeIn">
+                            </div>
+                            <div class="col-md-6">
+                                <h4>Details</h4>
+                                <p><strong>Height:</strong> ${pokemon.height / 10} m</p>
+                                <p><strong>Weight:</strong> ${pokemon.weight / 10} kg</p>
+                                <p><strong>Base Experience:</strong> ${pokemon.base_experience}</p>
+                                <p><strong>Abilities:</strong> ${pokemon.abilities.map(a => a.ability.name).join(', ')}</p>
+                                <p><strong>Types:</strong> ${pokemon.types.map(t => t.type.name).join(', ')}</p>
+                                <h5 class="mt-3">Stats</h5>
+                                <div class="stats-container">
+                                    ${pokemon.stats.map(stat => `
+                                        <div class="stat-item">
+                                            <span class="stat-name">${stat.stat.name}:</span>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-success animate__animated animate__slideInLeft" role="progressbar" style="width: ${stat.base_stat}%" aria-valuenow="${stat.base_stat}" aria-valuemin="0" aria-valuemax="100">${stat.base_stat}</div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                        return fetch(pokemon.species.url);
+                    })
+                    .then(response => response.json())
+                    .then(species => {
+                        return fetch(species.evolution_chain.url);
+                    })
+                    .then(response => response.json())
+                    .then(evolutionData => {
+                        displayEvolutionChain(evolutionData.chain);
+                    })
+                    .catch(err => {
+                        modalLoading.classList.add('d-none');
+                        pokemonDetails.innerHTML = '<p class="text-danger">Failed to load Pokémon details. Please try again.</p>';
+                    });
+            }
+
+            function displayEvolutionChain(chain) {
+                let evolutionHTML = '<h5 class="mt-4">Evolution Chain</h5><div class="d-flex justify-content-around align-items-center flex-wrap">';
+                let currentPokemon = chain;
+
+                while (currentPokemon) {
+                    evolutionHTML += `
+                        <div class="text-center m-2">
+                            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${getPokemonId(currentPokemon.species.url)}.png" alt="${currentPokemon.species.name}" class="evolution-sprite">
+                            <p>${currentPokemon.species.name}</p>
+                        </div>
+                    `;
+                    if (currentPokemon.evolves_to.length > 0) {
+                        evolutionHTML += '<i class="bi bi-arrow-right fs-2"></i>';
+                        currentPokemon = currentPokemon.evolves_to[0];
+                    } else {
+                        break;
+                    }
+                }
+
+                evolutionHTML += '</div>';
+                evolutionChain.innerHTML = evolutionHTML;
+            }
+
+            function searchPokemon() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const filteredPokemon = allPokemon.filter(pokemon => pokemon.name.toLowerCase().includes(searchTerm));
+                renderPokemonGrid(filteredPokemon);
+            }
+
+            searchButton.addEventListener('click', searchPokemon);
+            searchInput.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') {
+                    searchPokemon();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

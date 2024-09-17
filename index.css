@@ -1,0 +1,147 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.pokemon-card, .type-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.pokemon-card:hover, .type-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: contain;
+    padding: 1.5rem;
+    background-color: #f1f1f1;
+    transition: transform 0.3s ease;
+}
+
+.pokemon-card:hover .card-img-top {
+    transform: scale(1.1);
+}
+
+.card-title {
+    text-transform: capitalize;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.modal-body img {
+    max-height: 300px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+}
+
+.stats-container {
+    margin-top: 1rem;
+}
+
+.stat-item {
+    margin-bottom: 0.5rem;
+}
+
+.stat-name {
+    text-transform: capitalize;
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.progress {
+    height: 20px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    font-weight: bold;
+}
+
+@media (max-width: 576px) {
+    .card-img-top {
+        height: 150px;
+    }
+}
+
+.input-group {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 25px;
+    overflow: hidden;
+}
+
+#searchInput {
+    border: none;
+    padding: 15px 20px;
+    font-size: 1rem;
+}
+
+#searchButton {
+    border: none;
+    background-color: #007bff;
+    color: white;
+    padding: 0 20px;
+}
+
+#searchButton:hover {
+    background-color: #0056b3;
+}
+
+.animate__animated {
+    animation-duration: 1s;
+}
+
+.animate__pulse {
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+}
+
+.animate__fadeIn {
+    animation-duration: 1.5s;
+}
+
+.animate__slideInLeft {
+    animation-duration: 1s;
+}
+
+.evolution-sprite {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+
+#evolutionChain {
+    background-color: #f8f9fa;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.bi-arrow-right {
+    color: #007bff;
+}
+
+.type-card {
+    cursor: pointer;
+    text-align: center;
+}
+
+.type-card .card-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+}
+
+.type-card .card-title {
+    margin-bottom: 0;
+    font-size: 1.2rem;
+}
